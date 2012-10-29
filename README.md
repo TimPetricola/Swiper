@@ -1,11 +1,12 @@
 # jQuery Swiper
 
 Slideshow for mobile _à la_ Facebook.
+
 *Plugin only tested on Chrome & Safari iOS6, 
 
-*Demo:* 
-*License:* MIT License
-*Author:* Tim PEtricola - FrontFoot
+* *Demo:* 
+* *License:* MIT License
+* *Author:* Tim PEtricola - FrontFoot
 
 ## Usage
 
