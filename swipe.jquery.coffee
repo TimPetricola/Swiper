@@ -15,6 +15,19 @@ Based on Swipe 1.0 by Brad Birdsall
     interspace: 0
     callback: ->
 
+  $.fn.setTransitionDuration = (duration) ->
+    $(this).css 
+      webkitTransitionDuration: "#{duration}ms"
+      MozTransitionDuration: "#{duration}ms"
+      msTransitionDuration: "#{duration}ms"
+      OTransitionDuration: "#{duration}ms"
+      transitionDuration: "#{duration}ms"
+
+  $.fn.setTranslateX = (translation) ->
+    style = $(this).get(0).style
+    style.MozTransform = style.webkitTransform = 'translate3d(' + translation + 'px,0,0)'
+    style.msTransform  = style.OTransform = 'translateX(' + translation + 'px)'
+
 
   class Swiper
     constructor: (el, options) ->
@@ -89,17 +102,10 @@ Based on Swipe 1.0 by Brad Birdsall
       @translation = @options.previewWidth - index * @width
 
       # jQuery can't set transform CSS property, bach to plain javascript
-      style              = @$el.get(0).style
-      style.MozTransform = style.webkitTransform = 'translate3d(' + @translation + 'px,0,0)'
-      style.msTransform  = style.OTransform = 'translateX(' + @translation + 'px)'
+      @$el.setTranslateX(@translation)
       
       # Set duration speed (0 represents 1 to-1 scrolling) and translate
-      @$el.css 
-        webkitTransitionDuration: "#{duration} ms"
-        MozTransitionDuration: "#{duration} ms"
-        msTransitionDuration: "#{duration} ms"
-        OTransitionDuration: "#{duration} ms"
-        transitionDuration: "#{duration} ms"
+      @$el.setTransitionDuration duration 
       
       @index = index
 
@@ -132,9 +138,7 @@ Based on Swipe 1.0 by Brad Birdsall
       @deltaX = 0
 
       # Set transition time to 0 for 1-to-1 touch movement
-      @$el.css
-        MozTransitionDuration: '0ms'
-        webkitTransitionDuration: '0ms'
+      @$el.setTransitionDuration 0
 
       e.stopPropagation()
 
@@ -151,24 +155,21 @@ Based on Swipe 1.0 by Brad Birdsall
         @isScrolling = !!(@isScrolling || Math.abs(@deltaX) < Math.abs(e.touches[0].pageY - @start.pageY))
 
       # If user is not trying to scroll vertically
-      unless @isScrolling
-        e.preventDefault()
+      return if @isScrolling
+      
+      e.preventDefault()
 
-        # Cancel slideshow
-        clearTimeout @interval
+      # Cancel slideshow
+      clearTimeout @interval
 
-        # Increase resistance if first or last slide
-        # If first slide and sliding left OR last slide and sliding right AND sliding at all
-        condition = !@index && @deltaX > 0 || @index == @$slides.length - 1 && @deltaX < 0
-        # Determine resistance level or no resistance
-        div = if condition then Math.abs(@deltaX) / @width + 1 else 1
-        @deltaX = @deltaX / div
+      # Increase resistance if first or last slide
+      # If first slide and sliding left OR last slide and sliding right AND sliding at all
+      condition = !@index && @deltaX > 0 || @index == @$slides.length - 1 && @deltaX < 0
+      # Determine resistance level or no resistance
+      div = if condition then Math.abs(@deltaX) / @width + 1 else 1
+      @deltaX = @deltaX / div
 
-
-        style = @$el.get(0).style
-        style.MozTransform = style.webkitTransform = 'translate3d(' + (@deltaX + @translation) + 'px,0,0)'
-
-        e.stopPropagation()
+      @$el.setTranslateX(@deltaX + @translation)
 
     _onTouchEnd: (e) ->
       e = e.originalEvent

@@ -18,6 +18,21 @@ var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; 
     interspace: 0,
     callback: function() {}
   };
+  $.fn.setTransitionDuration = function(duration) {
+    return $(this).css({
+      webkitTransitionDuration: "" + duration + "ms",
+      MozTransitionDuration: "" + duration + "ms",
+      msTransitionDuration: "" + duration + "ms",
+      OTransitionDuration: "" + duration + "ms",
+      transitionDuration: "" + duration + "ms"
+    });
+  };
+  $.fn.setTranslateX = function(translation) {
+    var style;
+    style = $(this).get(0).style;
+    style.MozTransform = style.webkitTransform = 'translate3d(' + translation + 'px,0,0)';
+    return style.msTransform = style.OTransform = 'translateX(' + translation + 'px)';
+  };
   Swiper = (function() {
 
     function Swiper(el, options) {
@@ -92,21 +107,12 @@ var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; 
     };
 
     Swiper.prototype.slide = function(index, duration) {
-      var style;
       if (duration == null) {
         duration = this.options.speed;
       }
       this.translation = this.options.previewWidth - index * this.width;
-      style = this.$el.get(0).style;
-      style.MozTransform = style.webkitTransform = 'translate3d(' + this.translation + 'px,0,0)';
-      style.msTransform = style.OTransform = 'translateX(' + this.translation + 'px)';
-      this.$el.css({
-        webkitTransitionDuration: "" + duration + " ms",
-        MozTransitionDuration: "" + duration + " ms",
-        msTransitionDuration: "" + duration + " ms",
-        OTransitionDuration: "" + duration + " ms",
-        transitionDuration: "" + duration + " ms"
-      });
+      this.$el.setTranslateX(this.translation);
+      this.$el.setTransitionDuration(duration);
       return this.index = index;
     };
 
@@ -133,15 +139,12 @@ var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; 
       };
       this.isScrolling = void 0;
       this.deltaX = 0;
-      this.$el.css({
-        MozTransitionDuration: '0ms',
-        webkitTransitionDuration: '0ms'
-      });
+      this.$el.setTransitionDuration(0);
       return e.stopPropagation();
     };
 
     Swiper.prototype._onTouchMove = function(e) {
-      var condition, div, style;
+      var condition, div;
       e = e.originalEvent;
       if (e.touches.length > 1 || e.scale && e.scale !== 1) {
         return;
@@ -150,16 +153,15 @@ var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; 
       if (typeof this.isScrolling === 'undefined') {
         this.isScrolling = !!(this.isScrolling || Math.abs(this.deltaX) < Math.abs(e.touches[0].pageY - this.start.pageY));
       }
-      if (!this.isScrolling) {
-        e.preventDefault();
-        clearTimeout(this.interval);
-        condition = !this.index && this.deltaX > 0 || this.index === this.$slides.length - 1 && this.deltaX < 0;
-        div = condition ? Math.abs(this.deltaX) / this.width + 1 : 1;
-        this.deltaX = this.deltaX / div;
-        style = this.$el.get(0).style;
-        style.MozTransform = style.webkitTransform = 'translate3d(' + (this.deltaX + this.translation) + 'px,0,0)';
-        return e.stopPropagation();
+      if (this.isScrolling) {
+        return;
       }
+      e.preventDefault();
+      clearTimeout(this.interval);
+      condition = !this.index && this.deltaX > 0 || this.index === this.$slides.length - 1 && this.deltaX < 0;
+      div = condition ? Math.abs(this.deltaX) / this.width + 1 : 1;
+      this.deltaX = this.deltaX / div;
+      return this.$el.setTranslateX(this.deltaX + this.translation);
     };
 
     Swiper.prototype._onTouchEnd = function(e) {
