@@ -1,7 +1,9 @@
 ###
-jQuery Swipe Plugin
+jQuery Swiper Plugin
+Based on by Brad Birdsall's Swipe
 
-Based on Swipe 1.0 by Brad Birdsall
+Licensed under the MIT License
+http://opensource.org/licenses/MIT
 ###
 
 (($, window) ->
@@ -15,6 +17,7 @@ Based on Swipe 1.0 by Brad Birdsall
     interspace: 0
     callback: ->
 
+  # CSS helpers
   $.fn.setTransitionDuration = (duration) ->
     $(this).css 
       webkitTransitionDuration: "#{duration}ms"
@@ -45,60 +48,54 @@ Based on Swipe 1.0 by Brad Birdsall
         listStyle: 'none'
         margin: 0
 
+      # Prevent user to accidentally select image
+      $('img', @$el).css 'user-select', 'none'
+
       @_init()
       @_start()
 
+      transitionEvents = 'webkitTransitionEnd msTransitionEnd oTransitionEnd transitionend'
       @$el.on
-        'touchstart': (e)          => @_onTouchStart.call(@, e)
-        'touchmove': (e)           => @_onTouchMove.call(@, e)
-        'touchend': (e)            => @_onTouchEnd.call(@, e)
-        'webkitTransitionEnd': (e) => @_transitionEnd.call(@, e)
-        'msTransitionEnd': (e)     => @_transitionEnd.call(@, e)
-        'oTransitionEnd': (e)      => @_transitionEnd.call(@, e)
-        'transitionend': (e)       => @_transitionEnd.call(@, e)
+        'touchstart': (e)     => @_onTouchStart.call(@, e)
+        'touchmove': (e)      => @_onTouchMove.call(@, e)
+        'touchend': (e)       => @_onTouchEnd.call(@, e)
+        transitionEvents: (e) => @_transitionEnd.call(@, e)
 
       $(window).on 'resize', => @_init.call(@)
 
       @
 
     _init: ->
-      # Get slides
       @$slides = @$el.children()
 
-      # Return if their are less than 2 slides
       return unless @$slides.length > 1
 
-      # Determine width of each slide
       container   = @$container.get(0)
       @width      = if 'getBoundingClientRect' in container then container.getBoundingClientRect().width else container.offsetWidth
       @width      = @width - 2 * @options.previewWidth
       @width      = Math.ceil @width
       @innerWidth = @width - @options.interspace
 
-      # Return if measurement fails
       return unless @width
 
       # Hide slider element but keep positioning during setup
       @$container.css 'visibility', 'hidden'
 
-      # Dynamic CSS
       @$el.width Math.ceil(@$slides.length * (@width))
 
       @$slides.css
-        width: @innerWidth
-        marginLeft: @options.interspace/2
-        marginRight: @options.interspace/2
-        display: 'inline-block'
+        width:         @innerWidth
+        marginLeft:    @options.interspace/2
+        marginRight:   @options.interspace/2
+        display:       'inline-block'
         verticalAlign: 'top'
 
       # Set start position and force translate to remove initial flickering
-      @slide @index, 0
+      @_slide @index, 0
 
-      # Show slider
       @$container.css 'visibility', 'visible'
 
-    slide: (index, duration = @options.speed) ->
-
+    _slide: (index, duration = @options.speed) ->
       @translation = @options.previewWidth - index * @width
 
       # jQuery can't set transform CSS property, bach to plain javascript
@@ -124,29 +121,21 @@ Based on Swipe 1.0 by Brad Birdsall
       e = e.originalEvent
 
       @start =
-        # Get touch coordinates for delata calculations in onTouchMove
-        pageX: e.touches[0].pageX,
-        pageY: e.touches[0].pageY,
+        pageX: e.touches[0].pageX, # Get touch coordinates
+        pageY: e.touches[0].pageY, # for delta calculations in onTouchMove
+        
+        time: Number new Date() # Set initial timestamp of touch sequence
 
-        # Set initial timestamp of touch sequence
-        time: Number new Date()
-
-      # Used for testing first onTouchMove event
       @isScrolling = undefined
-
-      # Reset deltaX
-      @deltaX = 0
-
-      # Set transition time to 0 for 1-to-1 touch movement
-      @$el.setTransitionDuration 0
+      @deltaX      = 0
+      @$el.setTransitionDuration 0 # 1-to-1 touch movement
 
       e.stopPropagation()
 
     _onTouchMove: (e) ->
       e = e.originalEvent
 
-      # Ensure swiping with one touch and not pinching
-      return if e.touches.length > 1 || e.scale && e.scale != 1
+      return if e.touches.length > 1 # Exit if pinch
 
       @deltaX = e.touches[0].pageX - @start.pageX
 
@@ -154,20 +143,16 @@ Based on Swipe 1.0 by Brad Birdsall
       if typeof @isScrolling == 'undefined'
         @isScrolling = !!(@isScrolling || Math.abs(@deltaX) < Math.abs(e.touches[0].pageY - @start.pageY))
 
-      # If user is not trying to scroll vertically
-      return if @isScrolling
+      return if @isScrolling # If user is not trying to scroll vertically
       
       e.preventDefault()
-
-      # Cancel slideshow
-      clearTimeout @interval
+      clearTimeout @interval # Cancel auto slide
 
       # Increase resistance if first or last slide
-      # If first slide and sliding left OR last slide and sliding right AND sliding at all
-      condition = !@index && @deltaX > 0 || @index == @$slides.length - 1 && @deltaX < 0
-      # Determine resistance level or no resistance
-      div = if condition then Math.abs(@deltaX) / @width + 1 else 1
-      @deltaX = @deltaX / div
+      firstSlidingLeft = !@index && @deltaX > 0
+      lastSlidingRight = @index == @$slides.length - 1 && @deltaX < 0
+      resistance = if firstSlidingLeft || lastSlidingRight then Math.abs(@deltaX) / @width + 1 else 1
+      @deltaX = @deltaX / resistance
 
       @$el.setTranslateX(@deltaX + @translation)
 
@@ -186,7 +171,7 @@ Based on Swipe 1.0 by Brad Birdsall
       unless @isScrolling
         direction = if @deltaX < 0 then 1 else -1
         val       = if isValidSlide && !isPastBounds then direction else 0 
-        @slide @index + val, @options.speed
+        @_slide @index + val, @options.speed
 
       e.stopPropagation()
 
@@ -199,17 +184,17 @@ Based on Swipe 1.0 by Brad Birdsall
       clearTimeout(@interval)
 
       # if not at first slide
-      @slide @index-1, @options.speed if @index
+      @_slide @index-1, @options.speed if @index
 
     next: (delay) ->
       # Cancel next scheduled automatic transition, if any
       @delay = delay || 0
-      clearTimeout(@interval)
+      clearTimeout @interval 
 
-      if @index < @$slides.length - 1 # if not last slide
-        @slide @index+1, @options.speed
+      if @index < @$slides.length - 1 # unless last slide
+        @_slide @index+1, @options.speed
       else # if last slide
-        @slide 0, @options.speed
+        @_slide 0, @options.speed
 
     stop: ->
       @delay = 0
@@ -220,7 +205,7 @@ Based on Swipe 1.0 by Brad Birdsall
       @_start()
 
     goto: (index) ->
-      @slide index
+      @_slide index
 
     position: (to) ->
       if to? # Setter
@@ -230,7 +215,6 @@ Based on Swipe 1.0 by Brad Birdsall
 
 
   # jQuery plugin
-
   $.fn.swiper = (options) ->
     args = Array.prototype.slice.call(arguments, 1)
     r = []
