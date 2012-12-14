@@ -16,52 +16,50 @@ Based on Swipe 1.0 by Brad Birdsall
     callback: ->
 
 
-  Swiper = (el, options) ->
-    @options = $.extend {}, _defaults, options
-    @index = @options.start
-    @delay = @options.auto
+  class Swiper
+    constructor: (el, options) ->
+      @options = $.extend {}, _defaults, options
+      @index = @options.start
+      @delay = @options.auto
 
-    # Reference DOM elements
-    @$container = $(el)
-    @$el = @$container.children()
+      # Reference DOM elements
+      @$container = $(el)
+      @$el = @$container.children()
 
-    # Static CSS
-    @$container.css
-      overflow: 'hidden'
-      listStyle: 'none'
-      margin: 0
+      # Static CSS
+      @$container.css
+        overflow: 'hidden'
+        listStyle: 'none'
+        margin: 0
 
-    @_init()
-    @_start()
+      @_init()
+      @_start()
 
-    @$el.on
-      'touchstart': (e) => @_onTouchStart.call(@, e)
-      'touchmove': (e) => @_onTouchMove.call(@, e)
-      'touchend': (e) => @_onTouchEnd.call(@, e)
-      'webkitTransitionEnd': (e) => @_transitionEnd.call(@, e)
-      'msTransitionEnd': (e) => @_transitionEnd.call(@, e)
-      'oTransitionEnd': (e) => @_transitionEnd.call(@, e)
-      'transitionend': (e) => @_transitionEnd.call(@, e)
+      @$el.on
+        'touchstart': (e)          => @_onTouchStart.call(@, e)
+        'touchmove': (e)           => @_onTouchMove.call(@, e)
+        'touchend': (e)            => @_onTouchEnd.call(@, e)
+        'webkitTransitionEnd': (e) => @_transitionEnd.call(@, e)
+        'msTransitionEnd': (e)     => @_transitionEnd.call(@, e)
+        'oTransitionEnd': (e)      => @_transitionEnd.call(@, e)
+        'transitionend': (e)       => @_transitionEnd.call(@, e)
 
-    $(window).on 'resize', => @_init.call(@)
+      $(window).on 'resize', => @_init.call(@)
 
-    @
+      @
 
-  # Methods
-
-  Swiper.prototype =
     _init: ->
-      # Get and count slides
+      # Get slides
       @$slides = @$el.children()
 
       # Return if their are less than 2 slides
       return unless @$slides.length > 1
 
       # Determine width of each slide
-      container = @$container.get(0)
-      @width = if 'getBoundingClientRect' in container then container.getBoundingClientRect().width else container.offsetWidth
-      @width = @width - 2 * @options.previewWidth
-      @width = Math.ceil @width
+      container   = @$container.get(0)
+      @width      = if 'getBoundingClientRect' in container then container.getBoundingClientRect().width else container.offsetWidth
+      @width      = @width - 2 * @options.previewWidth
+      @width      = Math.ceil @width
       @innerWidth = @width - @options.interspace
 
       # Return if measurement fails
@@ -91,9 +89,9 @@ Based on Swipe 1.0 by Brad Birdsall
       @translation = @options.previewWidth - index * @width
 
       # jQuery can't set transform CSS property, bach to plain javascript
-      style = @$el.get(0).style
+      style              = @$el.get(0).style
       style.MozTransform = style.webkitTransform = 'translate3d(' + @translation + 'px,0,0)'
-      style.msTransform = style.OTransform = 'translateX(' + @translation + 'px)'
+      style.msTransform  = style.OTransform = 'translateX(' + @translation + 'px)'
       
       # Set duration speed (0 represents 1 to-1 scrolling) and translate
       @$el.css 
@@ -114,7 +112,6 @@ Based on Swipe 1.0 by Brad Birdsall
 
     _transitionEnd: (e) ->
       @_start() if @delay
-      #@options.callback e, @index, @$slides.eq(@index)
       @options.callback.call @$container, @index, @$slides.eq(@index)
 
     _onTouchStart: (e) ->
@@ -187,7 +184,7 @@ Based on Swipe 1.0 by Brad Birdsall
       # If not scrolling vertically
       unless @isScrolling
         direction = if @deltaX < 0 then 1 else -1
-        val = if isValidSlide && !isPastBounds then direction else 0 
+        val       = if isValidSlide && !isPastBounds then direction else 0 
         @slide @index + val, @options.speed
 
       e.stopPropagation()
