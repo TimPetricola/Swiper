@@ -2,11 +2,10 @@
 
 Slideshow for mobile _à la_ Facebook.
 
-*Plugin only tested on Chrome & Safari iOS6, 
+*Plugin only tested on Chrome & Safari for iOS6.*
 
-* *Demo:* 
 * *License:* MIT License
-* *Author:* Tim PEtricola - FrontFoot
+* *Author:* Tim Petricola - FrontFoot
 
 ## Usage
 
