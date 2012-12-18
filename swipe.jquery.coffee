@@ -54,12 +54,14 @@ http://opensource.org/licenses/MIT
       @_init()
       @_start()
 
-      transitionEvents = 'webkitTransitionEnd msTransitionEnd oTransitionEnd transitionend'
       @$el.on
-        'touchstart': (e)     => @_onTouchStart.call(@, e)
-        'touchmove': (e)      => @_onTouchMove.call(@, e)
-        'touchend': (e)       => @_onTouchEnd.call(@, e)
-        transitionEvents: (e) => @_transitionEnd.call(@, e)
+        'touchstart': (e)          => @_onTouchStart.call(@, e)
+        'touchmove': (e)           => @_onTouchMove.call(@, e)
+        'touchend': (e)            => @_onTouchEnd.call(@, e)
+        'webkitTransitionEnd': (e) => @_transitionEnd.call(@, e)
+        'msTransitionEnd': (e)     => @_transitionEnd.call(@, e)
+        'oTransitionEnd': (e)      => @_transitionEnd.call(@, e)
+        'transitionend': (e)       => @_transitionEnd.call(@, e)
 
       $(window).on 'resize', => @_init.call(@)
 
@@ -69,6 +71,8 @@ http://opensource.org/licenses/MIT
       @$slides = @$el.children()
 
       return unless @$slides.length > 1
+
+      @$el.css 'text-align', 'left'
 
       container   = @$container.get(0)
       @width      = if 'getBoundingClientRect' in container then container.getBoundingClientRect().width else container.offsetWidth
@@ -89,6 +93,7 @@ http://opensource.org/licenses/MIT
         marginRight:   @options.interspace/2
         display:       'inline-block'
         verticalAlign: 'top'
+        textAlign:     'center'
 
       # Set start position and force translate to remove initial flickering
       @_slide @index, 0
