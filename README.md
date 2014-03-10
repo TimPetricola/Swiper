@@ -1,5 +1,7 @@
 # jQuery Swiper
 
+## This code has not been changed since 2012 and has been used in only one project. I just keep it around for future reference, use at your own risk.
+
 Slideshow for mobile _à la_ Facebook.
 
 *Plugin only tested on Chrome & Safari for iOS6.*
